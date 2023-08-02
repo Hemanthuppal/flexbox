@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dynamic Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #calendar {
+            font-size: 18px;
+            display: inline-block;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        #calendar th, #calendar td {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        #calendar th {
+            background-color: #f2f2f2;
+        }
+        .icons {
+            font-size: 24px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="icons">
+        <span class="material-symbols-rounded" onclick="prevMonth">&#9664;</span>
+        <span class="material-symbols-rounded" onclick="nextMonth">&#9654;</span>
+    </div>
+
+    <table id="calendar">
+        <tbody id="calendar-body">
+            <!-- Calendar days will be populated here dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        let currentMonth = new Date().getMonth();
+
+        function displayCalendar(month) {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), month, 1);
+            const lastDay = new Date(today.getFullYear(), month + 1, 0);
+            const startingDay = firstDay.getDay();
+            const numDays = lastDay.getDate();
+
+            const calendarBody = document.getElementById('calendar-body');
+            calendarBody.innerHTML = '';
+
+            let date = 1;
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < 7; j++) {
+                    if ((i === 0 && j < startingDay) || date > numDays) {
+                        row.innerHTML += '<td></td>';
+                    } else {
+                        row.innerHTML += `<td>${date}</td>`;
+                        date++;
+                    }
+                }
+                calendarBody.appendChild(row);
+            }
+        }
+
+        function updateCalendar() {
+            displayCalendar(currentMonth);
+
+            // Calculate the milliseconds until the next day
+            const nextDay = new Date();
+            nextDay.setDate(nextDay.getDate() + 1);
+            nextDay.setHours(0, 0, 0, 0);
+            const timeUntilTomorrow = nextDay - Date.now();
+
+            // Update the calendar every day
+            setTimeout(updateCalendar, timeUntilTomorrow);
+        }
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) currentMonth = 11;
+            displayCalendar(currentMonth);
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) currentMonth = 0;
+            displayCalendar(currentMonth);
+        }
+
+        // Start updating the calendar
+        updateCalendar();
+    </script>
+</body>
+</html>

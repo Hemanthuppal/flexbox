@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dynamic Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #calendar {
+            font-size: 18px;
+            display: inline-block;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        #calendar th, #calendar td {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        #calendar th {
+            background-color: #f2f2f2;
+        }
+        .icons {
+            font-size: 24px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            justify-content: space-around;
+        }
+        .selected {
+            background-color: #b7e1fc;
+            font-weight: bold;
+        }
+        .today {
+            background-color: #fde2b1;
+        }
+        #selected-date {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    
+
+    <div id="selected-date"> </div>
+    
+
+    <table id="calendar">
+       
+        <thead>
+            <tr>
+                <th colspan="7">
+                    <span id="currentMonthYear"></span>
+                
+                        <span class="material-symbols-rounded icons" onclick="prevMonth()">&#9664;</span>
+                        <span class="material-symbols-rounded icons" onclick="nextMonth()">&#9654;</span>
+                    
+                </th>
+            </tr>
+            <tr>
+                <th>Sun</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+            </tr>
+        </thead>
+        <tbody id="calendar-body">
+            <!-- Calendar days will be populated here dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        let selectedDate = new Date();
+        let currentMonth = selectedDate.getMonth();
+        let currentYear = selectedDate.getFullYear();
+
+        function displayCalendar(month, year) {
+            const today = new Date();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startingDay = firstDay.getDay();
+            const numDays = lastDay.getDate();
+
+            const calendarBody = document.getElementById('calendar-body');
+            calendarBody.innerHTML = '';
+
+            const monthYearText = document.getElementById('currentMonthYear');
+            monthYearText.textContent = firstDay.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            let date = 1;
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < 7; j++) {
+                    if ((i === 0 && j < startingDay) || date > numDays) {
+                        row.innerHTML += '<td></td>';
+                    } else {
+                        const cell = document.createElement('td');
+                        cell.textContent = date;
+                        cell.setAttribute('data-year', year);
+                        cell.setAttribute('data-month', month);
+                        cell.setAttribute('data-date', date);
+                        
+                        if (date === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                            cell.classList.add('today');
+                        }
+
+                        if (date === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear()) {
+                            cell.classList.add('selected');
+                        }
+
+                        cell.addEventListener('click', () => selectDate(year, month, date));
+                        row.appendChild(cell);
+                        date++;
+                    }
+                }
+                calendarBody.appendChild(row);
+            }
+        }
+
+        function updateCalendar() {
+            displayCalendar(currentMonth, currentYear);
+
+            // Calculate the milliseconds until the next day
+            const nextDay = new Date();
+            nextDay.setDate(nextDay.getDate() + 1);
+            nextDay.setHours(0, 0, 0, 0);
+            const timeUntilTomorrow = nextDay - Date.now();
+
+            // Update the calendar every day
+            setTimeout(updateCalendar, timeUntilTomorrow);
+        }
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            displayCalendar(currentMonth, currentYear);
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            displayCalendar(currentMonth, currentYear);
+        }
+
+        function selectDate(year, month, date) {
+            selectedDate = new Date(year, month, date);
+            const selectedCells = document.querySelectorAll('.selected');
+            selectedCells.forEach(cell => cell.classList.remove('selected'));
+            const selectedCell = document.querySelector(`td[data-year="${year}"][data-month="${month}"][data-date="${date}"]`);
+            selectedCell.classList.add('selected');
+            updateSelectedDateUI();
+        }
+
+        function updateSelectedDateUI() {
+            const selectedDateElement = document.getElementById('selected-date');
+            const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+            selectedDateElement.textContent = 'Selected Date: ' + selectedDate.toLocaleDateString('en-US', options);
+        }
+
+        // Start updating the calendar
+        updateCalendar();
+        updateSelectedDateUI();
+    </script>
+</body>
+</html>

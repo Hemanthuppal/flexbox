@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <center>
+        <h1>How To Hide/Show HTML Table Column</h1>
+        <h2>using jQuerry</h2>
+        <hr/>
+        <input type="checkbox" name="EmpName">Employee Name
+        <input type="checkbox" name="Country">Country
+        <input type="checkbox" name="email">Email
+        <input type="checkbox" name="Salary">Salary
+        <hr/>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<script>
+    $("input:checkbox").attr("checked",false).click(function()
+    {
+var shcolumn="."+$(this).attr("name");
+$(shcolumn).toggle();
+    });
+</script>
+   
+</head>
+<body>
+    <table border="1">
+        <tr>
+            <th class="EmpName">Employee Name</th>
+            <th class="Country">Country</th>
+            <th class="email">Email</th>
+            <th class="Salary">Salary</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td class="EmpName">Charan</td>
+                <td class="Country">India</td>
+                <td class="email">charan@gmail.com</td>
+                <td class="Salary">15000</td>
+            </tr>
+            <tr>
+                <td class="EmpName">Charan</td>
+                <td class="Country">India</td>
+                <td class="email">charan@gmail.com</td>
+                <td class="Salary">15000</td>
+            </tr>
+            <tr>
+                <td class="EmpName">Charan</td>
+                <td class="Country">India</td>
+                <td class="email">charan@gmail.com</td>
+                <td class="Salary">15000</td>
+            </tr>
+            <tr>
+                <td class="EmpName">Charan</td>
+                <td class="Country">India</td>
+                <td class="email">charan@gmail.com</td>
+                <td class="Salary">15000</td>
+            </tr>
+        </tbody>
+    </table>
+    
+</body>
+</center>
+</html>

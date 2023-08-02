@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>CRUD Table with Search, Pagination, and Export</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/dataTables.bootstrap4.min.css">
+</head>
+
+<body>
+  <div class="container  mt-4 border border-dark">
+    <div class="container pt-5">
+        <div class="row">
+            <div class="col-md-4">
+              <select class="btn btn-success" id="exportFormat">
+                <option value="pdf">PDF</option>
+                <option value="excel">Excel</option>
+              </select>
+              <button class="btn btn-primary" id="exportButton" onclick="exportData()">Export</button>
+            </div>
+            <div class="col-md-6"></div>
+            <div style="justify-content:end;" class="col-md-2">
+              <button class="btn btn-primary" onclick="addNewRow()">+Add New</button>
+            </div>
+          </div>
+    </div>
+
+    <div class="row mt-4">
+      <div class="col-md-4">
+        <label for="hideColumns">Hide Columns:</label>
+        <select class="form-control" id="hideColumns" onchange="toggleColumnVisibility()">
+          <option value="none">None</option>
+          <option value="id">ID</option>
+          <option value="name">Name</option>
+          <option value="age">Age</option>
+          <option value="email">Email</option>
+        </select>
+      </div>
+
+     
+    </div>
+
+    <div class="container pt-4">
+      <table class="table table-striped mt-4 table-bordered" id="dataTable">
+        <thead>
+          <tr>
+            <th class="show" data-column="id">ID</th>
+            <th class="show" data-column="name">Name</th>
+            <th class="show" data-column="age">Age</th>
+            <th class="show" data-column="email">Email</th>
+            <th class="show">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+            <!-- Sample data -->
+            <tr>
+              <td>1</td>
+              <td>John Doe</td>
+              <td>30</td>
+              <td>john@example.com</td>
+              <td>
+                <button class="btn btn-info btn-sm " onclick="editRow(this)">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button>
+              </td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Shawn</td>
+              <td>45</td>
+              <td>shawn@example.com</td>
+              <td>
+                <button class="btn btn-info btn-sm" onclick="editRow(this)">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button>
+              </td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Dagg</td>
+              <td>85</td>
+              <td>dagg@example.com</td>
+              <td>
+                <button class="btn btn-info btn-sm" onclick="editRow(this)">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+      </table>
+    </div>
+
+  <!-- Add New User Modal -->
+  <div class="modal" id="addNewUserModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New User</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="userName">Name</label>
+            <input type="text" class="form-control" id="userName">
+          </div>
+          <div class="form-group">
+            <label for="userAge">Age</label>
+            <input type="number" class="form-control" id="userAge">
+          </div>
+          <div class="form-group">
+            <label for="userEmail">Email</label>
+            <input type="text" class="form-control" id="userEmail">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveNewUser()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div>
+  <!-- Bootstrap JS (make sure to include jQuery before this) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.11.0/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.0/js/dataTables.bootstrap4.min.js"></script>
+  <!-- jsPDF library for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <!-- SheetJS library for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.3/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.3/vfs_fonts.js"></script>
+
+  <script>
+     let nextId = 4; // Starting ID for new users
+
+$(document).ready(function () {
+  // Initialize DataTables with search and pagination options
+  $('#dataTable').DataTable({
+    lengthMenu: [5, 10, 25, 50],
+    pageLength: 10,
+  });
+});
+
+function addNewRow() {
+  // Show the add new user modal
+  $('#addNewUserModal').modal('show');
+}
+
+function saveNewUser() {
+  const name = document.getElementById("userName").value;
+  const age = document.getElementById("userAge").value;
+  const email = document.getElementById("userEmail").value;
+
+  // Perform any validation checks if needed
+
+  // Create a new row and insert it into the table
+  const table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+  const newRow = table.insertRow();
+  newRow.innerHTML = `<td>${nextId}</td><td>${name}</td><td>${age}</td><td>${email}</td>
+                      <td>
+                      <button class="btn btn-info btn-sm" onclick="editRow(this)">Edit</button>
+                      <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button>
+                      </td>`;
+
+
+  nextId++; // Increment the ID for the next new user
+
+  // Close the modal after saving
+  $('#addNewUserModal').modal('hide');
+}
+
+// Function to delete a row
+function deleteRow(button) {
+  const idToDelete = button.parentNode.parentNode.cells[0].innerText;
+  const table = document.getElementById("dataTable");
+  const tr = table.getElementsByTagName("tr");
+  for (let i = 0; i < tr.length; i++) {
+    const td = tr[i].getElementsByTagName("td")[0]; // Column index of the 'ID' field
+    if (td && td.innerText === idToDelete) {
+      tr[i].remove();
+      break;
+    }
+  }
+}
+
+// Function to edit a row
+function editRow(button) {
+  const idToEdit = button.parentNode.parentNode.cells[0].innerText;
+  const table = document.getElementsByTagName("table")[0];
+  const tr = table.getElementsByTagName("tr");
+  for (let i = 0; i < tr.length; i++) {
+    const td = tr[i].getElementsByTagName("td")[0]; // Column index of the 'ID' field
+    if (td && td.innerText === idToEdit) {
+      const name = tr[i].getElementsByTagName("td")[1].innerText;
+      const age = tr[i].getElementsByTagName("td")[2].innerText;
+      const email = tr[i].getElementsByTagName("td")[3].innerText;
+
+      // Replace the row data with input fields for editing
+      tr[i].getElementsByTagName("td")[1].innerHTML = `<input type="text" value="${name}">`;
+      tr[i].getElementsByTagName("td")[2].innerHTML = `<input type="number" value="${age}">`;
+      tr[i].getElementsByTagName("td")[3].innerHTML = `<input type="text" value="${email}">`;
+
+      // Add a Save button to save the changes
+      tr[i].getElementsByTagName("td")[4].innerHTML = `<button class="btn btn-success btn-sm" onclick="saveRow(this)">Save</button>`;
+      break;
+    }
+  }
+}
+
+function toggleColumnVisibility() {
+      const hideColumnsValue = document.getElementById("hideColumns").value;
+      const columnsToHide = document.querySelectorAll(`[data-column="${hideColumnsValue}"]`);
+
+      const dataTable = $('#dataTable').DataTable();
+      dataTable.columns().visible(true); // Show all columns
+
+      if (hideColumnsValue !== "none") {
+        // Hide the selected column
+        for (let i = 0; i < columnsToHide.length; i++) {
+          dataTable.columns(columnsToHide[i].cellIndex).visible(false);
+        }
+      }
+    }
+
+    // Function to save the edited row data
+    function saveRow(button) {
+      const idToSave = button.parentNode.parentNode.cells[0].innerText;
+      const name = button.parentNode.parentNode.getElementsByTagName("td")[1].getElementsByTagName("input")[0].value;
+      const age = button.parentNode.parentNode.getElementsByTagName("td")[2].getElementsByTagName("input")[0].value;
+      const email = button.parentNode.parentNode.getElementsByTagName("td")[3].getElementsByTagName("input")[0].value;
+
+      // Here you can perform the actual saving of the edited data to the server or perform any required actions.
+
+      // Replace the input fields with the updated data
+      button.parentNode.parentNode.getElementsByTagName("td")[1].innerText = name;
+      button.parentNode.parentNode.getElementsByTagName("td")[2].innerText = age;
+      button.parentNode.parentNode.getElementsByTagName("td")[3].innerText = email;
+
+      // Add the Edit and Delete buttons back
+      button.parentNode.innerHTML = `<button class="btn btn-info btn-sm" onclick="editRow(this)">Edit</button>
+                                     <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button>`;
+    }
+
+    // Function to export the table to PDF
+    function exportToPDF() {
+      const table = document.getElementById("dataTable");
+
+      // Define table headers
+      const headers = [];
+      for (let i = 0; i < table.rows[0].cells.length; i++) {
+        // Exclude the "Action" column from headers
+        if (table.rows[0].cells[i].innerText !== "Action") {
+          headers.push({ text: table.rows[0].cells[i].innerText, style: 'tableHeader' });
+        }
+      }
+
+      // Populate table rows
+      const body = [];
+      for (let i = 1; i < table.rows.length; i++) {
+        const rowData = [];
+        for (let j = 0; j < table.rows[i].cells.length; j++) {
+          // Exclude the "Action" column from rows
+          if (table.rows[0].cells[j].innerText !== "Action") {
+            rowData.push(table.rows[i].cells[j].innerText);
+          }
+        }
+        body.push(rowData);
+      }
+
+      // Define the PDF document
+      const docDefinition = {
+        content: [
+          { text: 'Exported Table', style: 'header' },
+          {
+            table: {
+              headerRows: 1,
+              widths: ['auto', 'auto', 'auto'],
+              body: [headers, ...body],
+            },
+            layout: 'lightHorizontalLines',
+          },
+        ],
+        styles: {
+          header: { fontSize: 18, bold: true, margin: [0, 0, 0, 10] },
+          tableHeader: { bold: true, fillColor: '#f2f2f2' },
+        },
+      };
+
+      // Create the PDF
+      pdfMake.createPdf(docDefinition).download("exported_data.pdf");
+    }
+
+    function exportToExcel() {
+      const table = document.getElementById("dataTable");
+
+      // Clone the table without the last column (Action)
+      const tableClone = table.cloneNode(true);
+      const headerRow = tableClone.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0];
+      const dataRows = tableClone.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+      const lastColumnIndex = headerRow.childElementCount - 1;
+      headerRow.removeChild(headerRow.children[lastColumnIndex]);
+      for (let i = 0; i < dataRows.length; i++) {
+        dataRows[i].removeChild(dataRows[i].children[lastColumnIndex]);
+      }
+
+      const wb = XLSX.utils.table_to_book(tableClone, {
+        sheetName: "Exported Data",
+      });
+      XLSX.writeFile(wb, "exported_data.xlsx");
+    }
+
+    function exportData() {
+      var exportFormat = document.getElementById("exportFormat").value;
+      if (exportFormat === "pdf") {
+        exportToPDF(); // Call the correct function for PDF export
+      } else if (exportFormat === "excel") {
+        exportToExcel();
+      }
+    }
+  </script>
+</body>
+
+</html>
